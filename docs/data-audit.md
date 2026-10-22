@@ -35,3 +35,9 @@ The thesis Appendix Table A.18 gives Control 85.72 cm and SL-35 63.44 cm in 2023
 ## Interpretation boundaries
 
 No inferential tests have been rerun; the original R scripts have not been changed. The raw workbook is not public. The simple proportions above use only observed binary values in the specified columns and do not correct for experimental blocks, clustering, censoring, or different definitions of survival. Reconciliation requires a documented sampling-unit definition and comparison with the original analysis workflow.
+
+## Source tracing: stored summary cells (2026-10-22)
+
+A further inspection identified the exact treatment-year summary values in the same workbook, worksheet `Evo_Sup`, range `K3:N6` (labels in column K, survival proportions for 2018/2019/2023 in columns L/M/N). For example, the Control 2023 cell contains `0.828125`, or **82.8125%**. All twelve stored summary values agree with the treatment-year percentages previously transcribed from the thesis to the displayed precision.
+
+**Revised interpretation:** The thesis treatment chart is traceable to a summary table in the original workbook. The discrepancy with simple counts of `Evo_Sup` rows remains unresolved, because the summary values and the row-level counts use different apparent denominators or subsets. Identifying the original summary formulas or calculation procedure is the next step. The earlier statement that the thesis table could not be traced to the workbook was too strong; traceability of stored summaries is now established, but row-level reproducibility is not.
