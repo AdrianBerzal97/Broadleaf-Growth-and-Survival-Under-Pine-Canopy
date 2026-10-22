@@ -1,0 +1,12 @@
+# Raw research data and local outputs
+*.xlsx
+*.xls
+*.csv
+*.rds
+*.RData
+*.Rhistory
+*.pdf
+.DS_Store
+.Rproj.user/
+data/
+outputs/
