@@ -20,6 +20,12 @@ The study examined *Sorbus torminalis*, *Quercus ilex*, *Quercus pyrenaica*, and
 
 See [survival results, numeric tables, and provenance](docs/survival-results.md). These are descriptive thesis-reported aggregates, not newly calculated model outputs. The species ranking in Appendix Table A.13 differs from the qualitative ranking in the thesis abstract; the discrepancy is documented rather than silently reconciled.
 
+## Mean seedling height
+
+![Mean seedling height by thinning treatment](figures/mean_height_by_treatment_2018_2023.svg)
+
+See [height results and source table](docs/height-results.md). Values are reported mean heights from thesis Appendix Table A.18 (cm), not independently recalculated growth rates.
+
 ## Findings reported in the original thesis
 
 - Canopy thinning increased light availability in the understory.
