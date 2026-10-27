@@ -1,209 +1,95 @@
-################################################################                                                           #
-##   ANOVA Crecimiento en Altura y Diámetro  Ańo 1 y 2      ####
-##                                                          ####
-################################################################                                                    #####
-
-# Cargar paquetes necesarios
-
-rm(list = ls())
-
-library(agricolae) # Hace pruebas de medias
-library(car)        # Selecciona el tipo de error para prueba de hipótesis.
-library(dplyr)
-library(Rmisc)
-library(xlsx)
-#setwd("C:/Users/JOSE LUIS GARCIA/OneDrive - Universidad Politécnica de Madrid/Doctorado_UPM/Tesis/1_Plantación bajo cubierta/Análisis estadístico/2. Crecimiento/Salidas")
-#getwd()
-
-
-#### Ańo1 ####
-
-# Importación de datos desde excel.
-growth<-read.table("clipboard", header=T, sep="\t", dec=".")
-str(growth)
-growth$BLOQUE<-as.factor(growth$BLOQUE)
-growth$TRATAMIENTO<-as.factor(growth$TRATAMIENTO)
-growth$ESPECIE<-as.factor(growth$ESPECIE)
-# Filtrar solo las plantas vivas en el ańo 1
-growth_1<-growth[growth$alt_uno != "Muerto",]
-# Convertimos la varible a numércia
-
-growth_1$alt_uno<-as.numeric(growth_1$alt_uno)
-growth_1$diam_uno<-as.numeric(growth_1$diam_uno)
-str(growth_1)
-# Creamos nuevas variable de crecmiento relativo y absoluto
-growth_1$IA_1<-growth_1$alt_uno-growth_1$alt_cero 
-growth_1$ID_1<-growth_1$diam_uno-growth_1$diam_cero
-growth_1$TRCA_0_1<-(log(growth_1$alt_uno)-log(growth_1$alt_cero))/11
-growth_1$TRCD_0_1<-(log(growth_1$diam_uno)-log(growth_1$diam_cero))/11
-
-# ANOVA ####
-# Ir cambiando la variable de respuesta
-options(contrasts=c(factor="contr.sum", ordered="contr.poly"))
-modelo<- lm(alt_uno~TRATAMIENTO*ESPECIE+BLOQUE, data = growth)
-Anova(modelo, type = "III")
-summary(modelo)
-plot(modelo)
-
-# Supuestos de ANOVA ####
-# Normalidad
-hist(residuals(modelo))
-qqnorm(residuals(modelo))
-qqline(residuals(modelo), col="red")
-shapiro.test(residuals(modelo))
-
-# Homocedasticidad
-plot(fitted(modelo), residuals(modelo), main="Residuos vs Predicciones")
-abline(h=0, col="red")
-leveneTest(alt_uno~TRATAMIENTO*ESPECIE, data = growth, center=median)
-
-#-Pruebas-Post-hoc con paquete agrocolae
-
- 
-out <- HSD.test(modelo,"ESPECIE", group=TRUE,console=TRUE)
-out <- HSD.test(modelo,"TRATAMIENTO", group=TRUE,console=TRUE)
-
-# Cáculo de promedios
-dplyr::summarise(group_by(growth_1, TRATAMIENTO), mean(TRCD_0_1)) 
-dplyr::summarise(group_by(growth_1, ESPECIE), mean(TRCD_0_1)) 
-
-Medias_T<-summarySE(growth_1, measurevar=c ("TRCD_0_1"), groupvars=c("TRATAMIENTO"),na.rm = TRUE)
-Medias_S<-summarySE(growth_1, measurevar=c ("TRCD_0_1"), groupvars=c("ESPECIE"),na.rm = TRUE)
-
-write.xlsx(Medias_T,"Medias_TRCD_0_1_T.xlsx")
-write.xlsx(Medias_S,"Medias_TRCD_0_1_S.xlsx")
-
-
-#### Ańo2####
-
-# Importación de datos desde excel.
-growth<-read.table("clipboard", header=T, sep="\t", dec=".")
-str(growth)
-growth$BLOQUE<-as.factor(growth$BLOQUE)
-growth$TRATAMIENTO<-as.factor(growth$TRATAMIENTO)
-growth$ESPECIE<-as.factor(growth$ESPECIE)
-
-
-# Filtrar solo las plantas vivas
-# Se usará para analizar diametro en ańo 2
-
-growth_y2<-growth[growth$alt_dos != "Muerto",]
-
-# Convertimos las varibles altura y diámetro a numérica
-
-growth_y2$diam_uno<-as.numeric(growth_y2$diam_uno)
-growth_y2$diam_dos<-as.numeric(growth_y2$diam_dos)
-growth_y2$alt_uno<-as.numeric(growth_y2$alt_uno)
-growth_y2$alt_dos<-as.numeric(growth_y2$alt_dos)
-str(growth_y2)
-
-# Creamos nuevas variables con el incremento absoluto (IX) y relativo (TRCX)
-growth_y2$ID_1_2<-growth_y2$diam_dos-growth_y2$diam_uno
-growth_y2$ID_0_2<-growth_y2$diam_dos-growth_y2$diam_cero
-growth_y2$IA_1_2<-growth_y2$alt_dos-growth_y2$alt_uno
-growth_y2$IA_0_2<-growth_y2$alt_dos-growth_y2$alt_cero
-
-# Tasa relativa de crecimiento en diámetro
-growth_y2$TRCD_1_2<-(log(growth_y2$diam_dos)-log(growth_y2$diam_uno))/11
-growth_y2$TRCD_0_2<-(log(growth_y2$diam_dos)-log(growth_y2$diam_cero))/22
-growth_y2$TRCA_1_2<-(log(growth_y2$alt_dos)-log(growth_y2$alt_uno))/11
-growth_y2$TRCA_0_2<-(log(growth_y2$alt_dos)-log(growth_y2$alt_cero))/22
-
-
-
-
-
-
-# Filtramos plantas ramoneadas
-growth_y2sr<-growth_y2[growth_y2$Ramon != "Si",]
-
-# Convertimos las varibles altura y diámetro a numérica
-
-growth_y2sr$diam_uno<-as.numeric(growth_y2sr$diam_uno)
-growth_y2sr$diam_dos<-as.numeric(growth_y2sr$diam_dos)
-growth_y2sr$alt_uno<-as.numeric(growth_y2sr$alt_uno)
-growth_y2sr$alt_dos<-as.numeric(growth_y2sr$alt_dos)
-str(growth_y2sr)
-
-# Creamos nuevas variables con el incremento absoluto (IX) y relativo (TRCX)
-growth_y2sr$ID_1_2<-growth_y2sr$diam_dos-growth_y2sr$diam_uno
-growth_y2sr$ID_0_2<-growth_y2sr$diam_dos-growth_y2sr$diam_cero
-growth_y2sr$IA_1_2<-growth_y2sr$alt_dos-growth_y2sr$alt_uno
-growth_y2sr$IA_0_2<-growth_y2sr$alt_dos-growth_y2sr$alt_cero
-
-# Tasa relativa de crecimiento en diámetro
-growth_y2sr$TRCD_1_2<-(log(growth_y2sr$diam_dos)-log(growth_y2sr$diam_uno))/11
-growth_y2sr$TRCD_0_2<-(log(growth_y2sr$diam_dos)-log(growth_y2sr$diam_cero))/22
-growth_y2sr$TRCA_1_2<-(log(growth_y2sr$alt_dos)-log(growth_y2sr$alt_uno))/11
-growth_y2sr$TRCA_0_2<-(log(growth_y2sr$alt_dos)-log(growth_y2sr$alt_cero))/22
-
-
-
-
-
-
-# Ojo, aquí se usan solo  plantas no ramoneadas#####
-
-#growth_2_dsr<-growth_2_d[growth_2_d$Ramon != "Si",]
-
-# Ojo, aquí se usan solo  plantas no ramoneadas
-growth_2_alt$IA_1_2<-growth_2_alt$alt_dos-growth_2_alt$alt_uno
-growth_2_alt$IA_0_2<-growth_2_alt$alt_dos-growth_2_alt$alt_cero
-growth_2_alt$TRCA_1_2<-(log(growth_2_alt$alt_dos)-log(growth_2_alt$alt_uno))/11
-growth_2_alt$TRCA_0_2<-(log(growth_2_alt$alt_dos)-log(growth_2_alt$alt_cero))/22
-
-
-
-# ANOVA ####
-# Ir cambiando la variable de respuesta
-options(contrasts=c(factor="contr.sum", ordered="contr.poly"))
-modelo<-lm((alt_dos~TRATAMIENTO*ESPECIE+ BLOQUE, data = growth_y2sr)
-Anova(modelo, type = "III")
-summary(modelo)
-
-# Supuestos de ANOVA ####
-# Normalidad
-hist(residuals(modelo))
-qqnorm(residuals(modelo))
-qqline(residuals(modelo), col="red")
-shapiro.test(residuals(modelo))
-
-# Homocedasticidad
-plot(fitted(modelo), residuals(modelo), main="Residuos vs Predicciones")
-abline(h=0, col="red")
-leveneTest(TRCA_0_2~ESPECIE*TRATAMIENTO, data = growth_2_alt, center=median)
-
-#-Pruebas-Post-hoc con paquete agrocolae
-
-out <- HSD.test(modelo,"ESPECIE", group=TRUE,console=TRUE)
-out <- HSD.test(modelo,"TRATAMIENTO", group=TRUE,console=TRUE)
-
-# Cáculo de promedios
-dplyr::summarise(group_by(growth_2_alt, TRATAMIENTO), mean(TRCA_0_2)) 
-dplyr::summarise(group_by(growth_2_alt, ESPECIE), mean(TRCA_0_2)) 
-
-
-Medias_T<-summarySE(growth_2_alt, measurevar=c ("TRCA_0_2"), groupvars=c("TRATAMIENTO"),na.rm = TRUE)
-Medias_S<-summarySE(growth_2_alt, measurevar=c ("TRCA_0_2"), groupvars=c("ESPECIE"),na.rm = TRUE)
-
-write.xlsx(Medias_T,"Medias_TRCA_0_2_T.xlsx")
-write.xlsx(Medias_S,"Medias_TRCA_0_2_S.xlsx")
-
-
-
-dplyr::summarise(group_by(growth_2_d, TRATAMIENTO), mean(ID_1_2)) 
-dplyr::summarise(group_by(growth_2_d, TRATAMIENTO), mean(ID_0_2)) 
-dplyr::summarise(group_by(growth_2_d, TRATAMIENTO), mean(TRCD_1_2)) 
-dplyr::summarise(group_by(growth_2_d, TRATAMIENTO), mean(TRCD_0_2))
-
-dplyr::summarise(group_by(growth_2_alt, TRATAMIENTO), mean(IA_1_2)) 
-dplyr::summarise(group_by(growth_2_alt, TRATAMIENTO), mean(IA_0_2)) 
-dplyr::summarise(group_by(growth_2_alt, TRATAMIENTO), mean(TRCA_1_2)) 
-dplyr::summarise(group_by(growth_2_alt, TRATAMIENTO), mean(TRCA_0_2))
-
-
-
-
-# Análisis usandola distribuci´no gamma
-
-
+# Growth analysis: height and diameter in years 1 and 2
+# Select the Excel workbook when prompted. Requires readxl, car, agricolae.
+# Expected columns: BLOQUE, TRATAMIENTO, ESPECIE, alt_cero, diam_cero,
+# alt_uno, diam_uno, alt_dos, diam_dos; optional Ramon.
+# "Muerto" is treated as missing for growth analyses.
+
+packages <- c("readxl", "car", "agricolae")
+missing_packages <- packages[!vapply(packages, requireNamespace, logical(1), quietly = TRUE)]
+if (length(missing_packages)) stop("Install packages: ", paste(missing_packages, collapse = ", "))
+options(contrasts = c("contr.sum", "contr.poly"))
+
+excel_file <- file.choose()
+sheet_name <- 1  # Change to a sheet name or number if needed.
+growth <- as.data.frame(readxl::read_excel(excel_file, sheet = sheet_name))
+required <- c("BLOQUE", "TRATAMIENTO", "ESPECIE", "alt_cero", "diam_cero",
+              "alt_uno", "diam_uno", "alt_dos", "diam_dos")
+absent <- setdiff(required, names(growth))
+if (length(absent)) stop("Missing Excel columns: ", paste(absent, collapse = ", "))
+
+for (col in c("BLOQUE", "TRATAMIENTO", "ESPECIE")) growth[[col]] <- factor(growth[[col]])
+measurements <- c("alt_cero", "diam_cero", "alt_uno", "diam_uno", "alt_dos", "diam_dos")
+for (col in measurements) {
+  value <- trimws(as.character(growth[[col]]))
+  value[tolower(value) %in% c("muerto", "", "na", "nan")] <- NA_character_
+  growth[[col]] <- suppressWarnings(as.numeric(gsub(",", ".", value, fixed = TRUE)))
+}
+
+# Rate units are per month: 11 months per observation interval, as in original script.
+safe_rgr <- function(end, start, months) {
+  out <- rep(NA_real_, length(end))
+  ok <- !is.na(end) & !is.na(start) & end > 0 & start > 0
+  out[ok] <- (log(end[ok]) - log(start[ok])) / months
+  out
+}
+
+growth$IA_1 <- growth$alt_uno - growth$alt_cero
+growth$ID_1 <- growth$diam_uno - growth$diam_cero
+growth$TRCA_0_1 <- safe_rgr(growth$alt_uno, growth$alt_cero, 11)
+growth$TRCD_0_1 <- safe_rgr(growth$diam_uno, growth$diam_cero, 11)
+growth$IA_1_2 <- growth$alt_dos - growth$alt_uno
+growth$IA_0_2 <- growth$alt_dos - growth$alt_cero
+growth$ID_1_2 <- growth$diam_dos - growth$diam_uno
+growth$ID_0_2 <- growth$diam_dos - growth$diam_cero
+growth$TRCA_1_2 <- safe_rgr(growth$alt_dos, growth$alt_uno, 11)
+growth$TRCA_0_2 <- safe_rgr(growth$alt_dos, growth$alt_cero, 22)
+growth$TRCD_1_2 <- safe_rgr(growth$diam_dos, growth$diam_uno, 11)
+growth$TRCD_0_2 <- safe_rgr(growth$diam_dos, growth$diam_cero, 22)
+
+# For year 2, optionally exclude browsed plants, matching original exploratory analysis.
+exclude_browsed_year2 <- TRUE
+growth_y2 <- growth
+if (exclude_browsed_year2 && "Ramon" %in% names(growth_y2)) {
+  growth_y2 <- growth_y2[is.na(growth_y2$Ramon) |
+                           tolower(trimws(as.character(growth_y2$Ramon))) != "si", ]
+}
+
+run_anova <- function(data, response, label) {
+  cols <- c(response, "TRATAMIENTO", "ESPECIE", "BLOQUE")
+  df <- stats::na.omit(data[, cols, drop = FALSE])
+  df <- droplevels(df)
+  if (nrow(df) < 5 || any(vapply(df[c("TRATAMIENTO", "ESPECIE", "BLOQUE")],
+                                nlevels, integer(1)) < 2)) {
+    message("Skipping ", label, ": insufficient complete observations or factor levels.")
+    return(invisible(NULL))
+  }
+  model <- stats::lm(stats::reformulate(c("TRATAMIENTO * ESPECIE", "BLOQUE"),
+                                        response = response), data = df)
+  cat("\n=== ", label, " ===\n", sep = "")
+  print(summary(model))
+  print(car::Anova(model, type = 3))
+  if (length(residuals(model)) >= 3 && length(residuals(model)) <= 5000)
+    print(shapiro.test(residuals(model)))
+  print(car::leveneTest(stats::reformulate("TRATAMIENTO * ESPECIE",
+                                           response = response), data = df))
+  if (df.residual(model) > 0) {
+    print(agricolae::HSD.test(model, "ESPECIE", group = TRUE)$groups)
+    print(agricolae::HSD.test(model, "TRATAMIENTO", group = TRUE)$groups)
+  }
+  invisible(model)
+}
+
+# Edit the response variables here to run other analyses from the original study.
+model_year1_height <- run_anova(growth, "alt_uno", "Year 1 height")
+model_year1_diameter <- run_anova(growth, "diam_uno", "Year 1 diameter")
+model_year2_height <- run_anova(growth_y2, "alt_dos", "Year 2 height")
+model_year2_diameter <- run_anova(growth_y2, "diam_dos", "Year 2 diameter")
+
+summary_by_group <- function(data, response, group) {
+  aggregate(data[[response]], by = list(group = data[[group]]),
+            FUN = function(x) c(n = sum(!is.na(x)), mean = mean(x, na.rm = TRUE),
+                                sd = sd(x, na.rm = TRUE)))
+}
+print(summary_by_group(growth, "TRCD_0_1", "TRATAMIENTO"))
+print(summary_by_group(growth_y2, "TRCA_0_2", "ESPECIE"))
+# Objects and results remain in the RStudio session. No output files are written.
